@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Medical Camp Manager</title>
+    <style>
+        :root {
+            color-scheme: light;
+            font-family: "Segoe UI", Arial, sans-serif;
+            color: #172033;
+            background: #f3f6fb;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+        }
+
+        header {
+            padding: 28px max(24px, calc((100% - 1120px) / 2));
+            color: white;
+            background: #174ea6;
+        }
+
+        header h1 {
+            margin: 0 0 6px;
+            font-size: 1.7rem;
+        }
+
+        header p {
+            margin: 0;
+            color: #dce8ff;
+        }
+
+        main {
+            display: grid;
+            grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
+            gap: 22px;
+            max-width: 1168px;
+            margin: 28px auto;
+            padding: 0 24px;
+        }
+
+        section {
+            min-width: 0;
+            padding: 22px;
+            border: 1px solid #e1e7f0;
+            border-radius: 12px;
+            background: white;
+            box-shadow: 0 4px 16px #1720330b;
+        }
+
+        h2 {
+            margin: 0 0 18px;
+            font-size: 1.2rem;
+        }
+
+        label {
+            display: block;
+            margin: 14px 0 6px;
+            font-size: .9rem;
+            font-weight: 600;
+        }
+
+        input {
+            width: 100%;
+            min-height: 42px;
+            padding: 9px 11px;
+            border: 1px solid #cbd4e1;
+            border-radius: 7px;
+            font: inherit;
+        }
+
+        input:focus {
+            outline: 2px solid #8bb6ff;
+            border-color: #3478dc;
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 20px;
+        }
+
+        button {
+            min-height: 38px;
+            padding: 8px 13px;
+            border: 0;
+            border-radius: 7px;
+            color: white;
+            background: #174ea6;
+            font: inherit;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #103c82;
+        }
+
+        button.secondary {
+            color: #26364d;
+            background: #e9eef6;
+        }
+
+        button.danger {
+            background: #bd3030;
+        }
+
+        button.small {
+            min-height: 32px;
+            padding: 5px 9px;
+            font-size: .85rem;
+        }
+
+        #message {
+            min-height: 1.4em;
+            margin: 14px 0 0;
+            font-size: .9rem;
+        }
+
+        #message.error {
+            color: #b42318;
+        }
+
+        #message.success {
+            color: #16803c;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th, td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #e8edf4;
+            vertical-align: middle;
+        }
+
+        th {
+            color: #53627a;
+            font-size: .82rem;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+        }
+
+        td:last-child {
+            white-space: nowrap;
+        }
+
+        .row-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        #empty-state {
+            padding: 24px 10px;
+            color: #68778d;
+            text-align: center;
+        }
+
+        @media (max-width: 760px) {
+            main {
+                grid-template-columns: 1fr;
+                margin-top: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+<header>
+    <h1>Medical Camp Manager</h1>
+    <p>Create, view, update, and delete medical camp records.</p>
+</header>
+<main>
+    <section aria-labelledby="form-title">
+        <h2 id="form-title">Add a medical camp</h2>
+        <form id="camp-form">
+            <label for="camp-name">Camp name</label>
+            <input id="camp-name" name="campName" type="text" required maxlength="120">
+
+            <label for="location">Location</label>
+            <input id="location" name="location" type="text" required maxlength="200">
+
+            <label for="camp-date">Camp date</label>
+            <input id="camp-date" name="campDate" type="date" required>
+
+            <label for="doctor-count">Number of doctors</label>
+            <input id="doctor-count" name="doctorCount" type="number" min="0" step="1" required>
+
+            <div class="actions">
+                <button id="submit-button" type="submit">Add camp</button>
+                <button id="cancel-button" class="secondary" type="button" hidden>Cancel edit</button>
+            </div>
+            <p id="message" role="status" aria-live="polite"></p>
+        </form>
+    </section>
+
+    <section aria-labelledby="list-title">
+        <h2 id="list-title">Medical camps</h2>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Camp</th>
+                    <th>Location</th>
+                    <th>Date</th>
+                    <th>Doctors</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody id="camp-list"></tbody>
+            </table>
+            <p id="empty-state" hidden>No medical camps yet. Add one using the form.</p>
+        </div>
+        <div class="actions">
+            <button id="refresh-button" class="secondary" type="button">Refresh list</button>
+        </div>
+    </section>
+</main>
+<script>
+    const form = document.querySelector("#camp-form");
+    const list = document.querySelector("#camp-list");
+    const message = document.querySelector("#message");
+    const formTitle = document.querySelector("#form-title");
+    const submitButton = document.querySelector("#submit-button");
+    const cancelButton = document.querySelector("#cancel-button");
+    const emptyState = document.querySelector("#empty-state");
+    let editingId = null;
+    let camps = [];
+
+    async function request(url, options = {}) {
+        const response = await fetch(url, options);
+        if (!response.ok) {
+            const details = await response.text();
+            throw new Error(details || `Request failed (${response.status})`);
+        }
+        if (response.status === 204) {
+            return null;
+        }
+        const contentType = response.headers.get("content-type") || "";
+        return contentType.includes("application/json") ? response.json() : response.text();
+    }
+
+    function showMessage(text, type = "") {
+        message.textContent = text;
+        message.className = type;
+    }
+
+    function setEditing(camp) {
+        editingId = camp ? camp.id : null;
+        form.elements.campName.value = camp ? camp.campName : "";
+        form.elements.location.value = camp ? camp.location : "";
+        form.elements.campDate.value = camp ? camp.campDate : "";
+        form.elements.doctorCount.value = camp ? camp.doctorCount : "";
+        formTitle.textContent = camp ? `Update camp #${camp.id}` : "Add a medical camp";
+        submitButton.textContent = camp ? "Save changes" : "Add camp";
+        cancelButton.hidden = !camp;
+        showMessage("");
+    }
+
+    function renderCamps() {
+        list.replaceChildren();
+        emptyState.hidden = camps.length !== 0;
+
+        for (const camp of camps) {
+            const row = document.createElement("tr");
+            for (const value of [camp.id, camp.campName, camp.location, camp.campDate, camp.doctorCount]) {
+                const cell = document.createElement("td");
+                cell.textContent = value ?? "";
+                row.append(cell);
+            }
+
+            const actionsCell = document.createElement("td");
+            const actions = document.createElement("div");
+            actions.className = "row-actions";
+
+            const editButton = document.createElement("button");
+            editButton.type = "button";
+            editButton.className = "small";
+            editButton.textContent = "Edit";
+            editButton.addEventListener("click", () => setEditing(camp));
+
+            const deleteButton = document.createElement("button");
+            deleteButton.type = "button";
+            deleteButton.className = "small danger";
+            deleteButton.textContent = "Delete";
+            deleteButton.addEventListener("click", () => deleteCamp(camp));
+
+            actions.append(editButton, deleteButton);
+            actionsCell.append(actions);
+            row.append(actionsCell);
+            list.append(row);
+        }
+    }
+
+    async function loadCamps() {
+        try {
+            camps = await request("/DisplayAll");
+            renderCamps();
+        } catch (error) {
+            showMessage(`Could not load camps: ${error.message}`, "error");
+        }
+    }
+
+    async function deleteCamp(camp) {
+        if (!window.confirm(`Delete "${camp.campName}"?`)) {
+            return;
+        }
+        try {
+            await request(`/Delete/${encodeURIComponent(camp.id)}`, { method: "DELETE" });
+            if (editingId === camp.id) {
+                setEditing(null);
+            }
+            showMessage("Medical camp deleted.", "success");
+            await loadCamps();
+        } catch (error) {
+            showMessage(`Could not delete camp: ${error.message}`, "error");
+        }
+    }
+
+    form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const camp = {
+            campName: form.elements.campName.value.trim(),
+            location: form.elements.location.value.trim(),
+            campDate: form.elements.campDate.value,
+            doctorCount: Number(form.elements.doctorCount.value)
+        };
+        const isEditing = editingId !== null;
+        const url = isEditing ? `/Update/${encodeURIComponent(editingId)}` : "/Add";
+
+        try {
+            await request(url, {
+                method: isEditing ? "PUT" : "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(camp)
+            });
+            setEditing(null);
+            form.reset();
+            showMessage(isEditing ? "Medical camp updated." : "Medical camp added.", "success");
+            await loadCamps();
+        } catch (error) {
+            showMessage(`Could not save camp: ${error.message}`, "error");
+        }
+    });
+
+    cancelButton.addEventListener("click", () => {
+        form.reset();
+        setEditing(null);
+    });
+    document.querySelector("#refresh-button").addEventListener("click", loadCamps);
+    loadCamps();
+</script>
+</body>
+</html>

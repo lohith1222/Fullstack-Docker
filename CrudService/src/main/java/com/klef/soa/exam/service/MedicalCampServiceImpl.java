@@ -1,6 +1,7 @@
 package com.klef.soa.exam.service;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
@@ -25,6 +26,22 @@ public class MedicalCampServiceImpl implements MedicalCampService {
     @Override
     public List<MedicalCamp> getAll() {
         return repository.findAll();
+    }
+
+    @Override
+    public Optional<MedicalCamp> getById(Long id) {
+        return repository.findById(id);
+    }
+
+    @Override
+    public Optional<MedicalCamp> update(Long id, MedicalCamp medicalCamp) {
+        return repository.findById(id).map(existingCamp -> {
+            existingCamp.setCampName(medicalCamp.getCampName());
+            existingCamp.setLocation(medicalCamp.getLocation());
+            existingCamp.setCampDate(medicalCamp.getCampDate());
+            existingCamp.setDoctorCount(medicalCamp.getDoctorCount());
+            return repository.save(existingCamp);
+        });
     }
 
     @Override

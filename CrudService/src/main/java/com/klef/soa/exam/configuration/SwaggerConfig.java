@@ -16,7 +16,7 @@ public class SwaggerConfig {
                 .info(new Info()
                         .title("Medical Camp CRUD Service API")
                         .version("1.0")
-                        .description("API for adding, displaying, and deleting medical camps")
+                        .description("API for creating, displaying, updating, and deleting medical camps")
                         .contact(new Contact()
                                 .name("KLUniversity")
                                 .email("demo@kluniversity.in")));

@@ -1,6 +1,7 @@
 package com.klef.soa.exam.controller;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -8,6 +9,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -36,6 +38,23 @@ public class MedicalCampController {
     @GetMapping("/DisplayAll")
     public List<MedicalCamp> getAll() {
         return service.getAll();
+    }
+
+    @GetMapping("/Display/{id}")
+    public ResponseEntity<MedicalCamp> getById(@PathVariable Long id) {
+        return service.getById(id)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @PutMapping("/Update/{id}")
+    public ResponseEntity<MedicalCamp> update(
+            @PathVariable Long id,
+            @RequestBody MedicalCamp medicalCamp) {
+        Optional<MedicalCamp> updatedCamp = service.update(id, medicalCamp);
+        return updatedCamp
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/Delete/{id}")
